@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Quadiro Technologies</title>
+    <style>
+        /* Your existing CSS */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Admin Dashboard - Quadiro Technologies</h2>
+        <div class="stats">
+            <h3>Statistics</h3>
+            <p id="total-cars">Total Cars: 0</p>
+        </div>
+        <div class="car-list" >
+            <h3>Car List</h3>
+            <table>
+                <thead>
+                    <tr >
+                        <th>Car Name</th>
+                        <th>Manufacturing Year</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="car-table-body">
+                    <!-- Car rows will be appended here -->
+                </tbody>
+            </table>
+        </div>
+        <div class="car-form">
+            <h3>Add New Car</h3>
+            <form id="carForm">
+                <label for="carName">Car Name</label>
+                <input type="text" id="carName" name="carName" required>
+              <br> <br> <label for="manufacturingYear">Manufacturing Year</label>
+                <input type="number" id="manufacturingYear" name="manufacturingYear" required>
+              <br> <br> <label for="price">Price</label>
+                <input type="number" id="price" name="price" required>
+                <button type="submit">Add Car</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function fetchCars() {
+            const response = await fetch('/api/cars');
+            const cars = await response.json();
+            return cars;
+        }
+
+        function renderCars(cars) {
+            const carTableBody = document.getElementById('car-table-body');
+            carTableBody.innerHTML = '';
+            cars.forEach(car => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${car.name}</td>
+                    <td>${car.manufacturingYear}</td>
+                    <td>${car.price}</td>
+                    <td>
+                        <button onclick="deleteCar('${car._id}')">Delete</button>
+                        <button onclick="editCar('${car._id}')">Edit</button>
+                    </td>
+                `;
+                carTableBody.appendChild(row);
+            });
+        }
+
+        async function updateStats(cars) {
+            const totalCars = cars.length;
+            document.getElementById('total-cars').textContent = `Total Cars: ${totalCars}`;
+        }
+
+        async function loadDashboard() {
+            const cars = await fetchCars();
+            renderCars(cars);
+            updateStats(cars);
+        }
+
+        document.getElementById('carForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const car = {
+                name: document.getElementById('carName').value,
+                manufacturingYear: document.getElementById('manufacturingYear').value,
+                price: document.getElementById('price').value
+            };
+
+            await fetch('/api/cars', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(car),
+            });
+
+            loadDashboard();
+        });
+
+        async function deleteCar(carId) {
+            await fetch(`/api/cars/${carId}`, {
+                method: 'DELETE',
+            });
+
+            loadDashboard();
+        }
+
+        function editCar(carId) {
+            // Implement edit functionality if needed
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
